@@ -1,9 +1,14 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -16,34 +21,36 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
-import type { Database } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type BaseSyntheticEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ENDANGERMENT_STATUSES, KINGDOMS, type Species } from "./types";
 
-type Species = Database["public"]["Tables"]["species"]["Row"];
+// Keep enum validation consistent with add dialog and DB enum constraints.
+const kingdoms = z.enum(KINGDOMS);
+const endangermentStatuses = z.enum(ENDANGERMENT_STATUSES);
 
-const kingdoms = z.enum(["Animalia", "Plantae", "Fungi", "Protista", "Archaea", "Bacteria"]);
-
+// Schema validates and normalizes edit input before sending updates to Supabase.
 const speciesSchema = z.object({
   scientific_name: z
     .string()
     .trim()
     .min(1)
-    .transform((val) => val?.trim()),
+    .transform((val) => val.trim()),
   common_name: z
     .string()
     .nullable()
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
   kingdom: kingdoms,
+  endangerment_status: endangermentStatuses,
   total_population: z.number().int().positive().min(1).nullable(),
   image: z
     .string()
-    .url()
     .nullable()
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (!val || val.trim() === "" ? null : val.trim()))
+    .refine((val) => val === null || z.string().url().safeParse(val).success, "Please enter a valid image URL."),
   description: z
     .string()
     .nullable()
@@ -54,14 +61,17 @@ type FormData = z.infer<typeof speciesSchema>;
 
 export default function EditSpeciesDialog({ species }: { species: Species }) {
   const router = useRouter();
+  // Controlled open state lets us intercept close events and warn about unsaved changes.
   const [open, setOpen] = useState<boolean>(false);
 
+  // Initialize form with current row values.
   const form = useForm<FormData>({
     resolver: zodResolver(speciesSchema),
     defaultValues: {
       scientific_name: species.scientific_name,
       common_name: species.common_name,
       kingdom: species.kingdom,
+      endangerment_status: species.endangerment_status,
       total_population: species.total_population,
       image: species.image,
       description: species.description,
@@ -71,10 +81,12 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
 
   useEffect(() => {
     if (open) {
+      // Whenever dialog reopens, reset form to latest server-provided species values.
       form.reset({
         scientific_name: species.scientific_name,
         common_name: species.common_name,
         kingdom: species.kingdom,
+        endangerment_status: species.endangerment_status,
         total_population: species.total_population,
         image: species.image,
         description: species.description,
@@ -84,6 +96,7 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
 
   const onSubmit = async (input: FormData) => {
     const supabase = createBrowserSupabaseClient();
+    // Update only this species row, preserving all unchanged fields.
     const { error } = await supabase
       .from("species")
       .update({
@@ -91,6 +104,7 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
         common_name: input.common_name,
         description: input.description,
         kingdom: input.kingdom,
+        endangerment_status: input.endangerment_status,
         total_population: input.total_population,
         image: input.image,
       })
@@ -104,6 +118,7 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
       });
     }
 
+    // Close, refresh data-backed server components, then notify.
     setOpen(false);
     router.refresh();
 
@@ -113,8 +128,25 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
     });
   };
 
+  const confirmDiscardChanges = () => {
+    if (!form.formState.isDirty) {
+      // No changes made, safe to close immediately.
+      return true;
+    }
+
+    // Guard against accidental close if user modified any fields.
+    return window.confirm("You have unsaved changes. Canceling now will discard them. Continue?");
+  };
+
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    // Always allow opening; gate closing behind unsaved-changes confirmation.
+    if (nextOpen || confirmDiscardChanges()) {
+      setOpen(nextOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>
         <Button variant="secondary">Edit</Button>
       </DialogTrigger>
@@ -124,8 +156,10 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
           <DialogDescription>Update the fields below, then click save when you&apos;re done.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
+          {/* Wrap submit with RHF handler so zod validation runs before onSubmit. */}
           <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)}>
             <div className="grid w-full items-center gap-4">
+              {/* Scientific name field. */}
               <FormField
                 control={form.control}
                 name="scientific_name"
@@ -169,9 +203,38 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
                       </FormControl>
                       <SelectContent>
                         <SelectGroup>
-                          {kingdoms.options.map((kingdom, index) => (
-                            <SelectItem key={index} value={kingdom}>
+                          {kingdoms.options.map((kingdom) => (
+                            <SelectItem key={kingdom} value={kingdom}>
                               {kingdom}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endangerment_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endangerment status</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(endangermentStatuses.parse(value))}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select endangerment status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          {endangermentStatuses.options.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -195,7 +258,11 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
                           value={value ?? ""}
                           placeholder="300000"
                           {...rest}
-                          onChange={(event) => field.onChange(+event.target.value)}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            // Convert empty string to null for optional numeric DB column.
+                            field.onChange(nextValue === "" ? null : Number(nextValue));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -207,15 +274,17 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
                 control={form.control}
                 name="image"
                 render={({ field }) => {
-                  const { value, ...rest } = field;
                   return (
                     <FormItem>
                       <FormLabel>Image URL</FormLabel>
                       <FormControl>
                         <Input
-                          value={value ?? ""}
+                          value={field.value ?? ""}
                           placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/George_the_amazing_guinea_pig.jpg/440px-George_the_amazing_guinea_pig.jpg"
-                          {...rest}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormMessage />
@@ -244,14 +313,19 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
                 }}
               />
               <div className="flex">
-                <Button type="submit" className="ml-1 mr-1 flex-auto">
+                {/* Prevent duplicate updates while request is in flight. */}
+                <Button type="submit" className="ml-1 mr-1 flex-auto" disabled={form.formState.isSubmitting}>
                   Save Changes
                 </Button>
-                <DialogClose asChild>
-                  <Button type="button" className="ml-1 mr-1 flex-auto" variant="secondary">
-                    Cancel
-                  </Button>
-                </DialogClose>
+                {/* Route cancel through shared open-change handler to reuse discard protection. */}
+                <Button
+                  type="button"
+                  className="ml-1 mr-1 flex-auto"
+                  variant="secondary"
+                  onClick={() => handleDialogOpenChange(false)}
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           </form>

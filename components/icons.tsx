@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import {
   AlertTriangle,
   ArrowRight,
@@ -25,6 +31,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 
+// Central icon registry so components can import a single object.
 export const Icons = {
   logo: Command,
   close: X,
@@ -47,6 +54,7 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   laptop: Laptop,
+  // Custom SVG for GitHub brand mark (not included as Lucide icon).
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

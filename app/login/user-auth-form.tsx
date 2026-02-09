@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +23,9 @@ import { z } from "zod";
 
 // Create Zod object schema with validations
 const userAuthSchema = z.object({
+  // Supabase OTP is email-based in this flow.
   email: z.string().email(),
+  // Code is entered only during verify step.
   code: z.string().min(6).optional(),
 });
 
@@ -36,17 +44,23 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  // request -> send OTP, verify -> submit OTP token.
   const [step, setStep] = useState<"request" | "verify">("request");
+  // Persist requested email so verify/resend can reuse it.
   const [requestedEmail, setRequestedEmail] = useState<string | null>(null);
   const router = useRouter();
+  const emailErrorId = "email-error";
+  const codeErrorId = "code-error";
 
   // Obtain supabase client from context provider
   const supabaseClient = createBrowserSupabaseClient();
 
   const onSubmit = async (input: FormData) => {
+    // Prevent duplicate submissions while previous request is pending.
     setIsLoading(true);
 
     if (step === "request") {
+      // Normalize before sending to Supabase.
       const email = input.email.toLowerCase();
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
@@ -75,6 +89,7 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
     }
 
     const email = requestedEmail ?? input.email.toLowerCase();
+    // Users sometimes paste with spaces; strip them before verification.
     const code = input.code?.replace(/\s+/g, "");
 
     if (!code) {
@@ -102,13 +117,14 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
       });
     }
 
+    // Successful verification: navigate to first protected feature.
     router.replace("/species");
     router.refresh();
   };
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
-      <form onSubmit={(e: BaseSyntheticEvent) => void handleSubmit(onSubmit)(e)}>
+      <form onSubmit={(e: BaseSyntheticEvent) => void handleSubmit(onSubmit)(e)} aria-busy={isLoading}>
         <div className="grid gap-2">
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor="email">
@@ -122,9 +138,16 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
               autoComplete="email"
               autoCorrect="off"
               disabled={isLoading || step === "verify"}
+              aria-invalid={!!errors?.email}
+              aria-describedby={errors?.email ? emailErrorId : undefined}
               {...register("email")}
             />
-            {errors?.email && <p className="px-1 text-xs text-red-600">{errors.email.message}</p>}
+            {errors?.email && (
+              // Inline validation feedback bound via aria-describedby.
+              <p id={emailErrorId} role="alert" className="px-1 text-xs text-destructive">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           {step === "verify" && (
             <div className="grid gap-1">
@@ -138,9 +161,16 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 disabled={isLoading}
+                aria-invalid={!!errors?.code}
+                aria-describedby={errors?.code ? codeErrorId : undefined}
                 {...register("code")}
               />
-              {errors?.code && <p className="px-1 text-xs text-red-600">{errors.code.message}</p>}
+              {errors?.code && (
+                // Inline validation feedback for OTP field.
+                <p id={codeErrorId} role="alert" className="px-1 text-xs text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
             </div>
           )}
           <Button disabled={isLoading}>
@@ -153,6 +183,7 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
               variant="ghost"
               disabled={isLoading}
               onClick={() => {
+                // Return to email step and clear stale code input.
                 setStep("request");
                 setRequestedEmail(null);
                 setValue("code", "");
@@ -168,6 +199,7 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
               disabled={isLoading}
               onClick={() => {
                 void (async () => {
+                  // Resend uses the same email previously requested.
                   const email = (requestedEmail ?? "").trim();
                   if (!email) {
                     toast({
@@ -197,6 +229,7 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
                   }
 
                   setValue("code", "");
+                  // Keep user in verify step with a clean code field.
                   toast({
                     title: "Code resent",
                     description: "Check your email for a new code.",

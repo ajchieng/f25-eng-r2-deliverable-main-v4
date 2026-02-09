@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import type * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
 import * as React from "react";
@@ -13,6 +19,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+// Alias React Hook Form provider to keep imports consistent in app code.
 const Form = FormProvider;
 
 interface FormFieldContextValue<
@@ -31,6 +38,7 @@ const FormField = <
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
   return (
+    // Store field name in context so nested components can derive ids/state.
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
     </FormFieldContext.Provider>
@@ -38,6 +46,7 @@ const FormField = <
 };
 
 const useFormField = () => {
+  // Access both field-specific context and containing form-item id.
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
@@ -51,6 +60,7 @@ const useFormField = () => {
   const { id } = itemContext;
 
   return {
+    // Generate deterministic ids for aria associations.
     id,
     name: fieldContext.name,
     formItemId: `${id}-form-item`,
@@ -68,6 +78,7 @@ const FormItemContext = React.createContext<FormItemContextValue>({} as FormItem
 
 const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
+    // Unique id per item instance to connect label/control/message.
     const id = React.useId();
 
     return (
@@ -85,6 +96,7 @@ const FormLabel = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField();
 
+  // Tie label `htmlFor` to generated control id.
   return <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />;
 });
 FormLabel.displayName = "FormLabel";
@@ -97,6 +109,7 @@ const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.Compon
       <Slot
         ref={ref}
         id={formItemId}
+        // Compose aria-describedby ids depending on whether an error message is present.
         aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
         aria-invalid={!!error}
         {...props}
@@ -118,6 +131,7 @@ FormDescription.displayName = "FormDescription";
 const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, children, ...props }, ref) => {
     const { error, formMessageId } = useFormField();
+    // Prefer validation message from RHF; fallback to explicit children.
     const body = error ? String(error?.message) : children;
 
     if (!body) {

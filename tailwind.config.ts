@@ -1,10 +1,14 @@
 import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
 
+// Tailwind scans these files for class names, then generates only the utilities we actually use.
 const config: Config = {
+  // Theme switching is class-based (`.dark`) so we can control mode from the UI toggle.
   darkMode: ["class"],
+  // Include all route/component folders where Tailwind classes appear.
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   theme: {
+    // Shared page-width container settings.
     container: {
       center: true,
       padding: "2rem",
@@ -13,6 +17,12 @@ const config: Config = {
       },
     },
     extend: {
+      // Fonts are wired to CSS variables defined by `next/font` in app/layout.tsx.
+      fontFamily: {
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "sans-serif"],
+        display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
+      },
+      // Color tokens map to CSS variables from app/globals.css for theme consistency.
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -48,27 +58,31 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      // Radius tokens keep corners consistent across components.
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      // Keyframes support Radix accordion open/close animation states.
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
         },
       },
+      // Named animation helpers used by UI components.
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
+  // Adds utility classes from `tailwindcss-animate`.
   plugins: [animate],
 };
 

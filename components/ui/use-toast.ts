@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 // Inspired by react-hot-toast library
 import * as React from "react";
 
@@ -23,6 +29,7 @@ const actionTypes = {
 let count = 0;
 
 function genId() {
+  // Monotonic id generator for toast keys.
   count = (count + 1) % Number.MAX_VALUE;
   return count.toString();
 }
@@ -54,12 +61,14 @@ interface State {
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 const addToRemoveQueue = (toastId: string) => {
+  // Avoid scheduling duplicate removal timers.
   if (toastTimeouts.has(toastId)) {
     return;
   }
 
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId);
+    // Remove toast from memory state after delay.
     dispatch({
       type: "REMOVE_TOAST",
       toastId: toastId,
@@ -74,6 +83,7 @@ export const reducer = (state: State, action: Action): State => {
     case "ADD_TOAST":
       return {
         ...state,
+        // Enforce max concurrent toast limit.
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
       };
 
@@ -127,7 +137,9 @@ const listeners: ((state: State) => void)[] = [];
 let memoryState: State = { toasts: [] };
 
 function dispatch(action: Action) {
+  // Update shared in-memory state.
   memoryState = reducer(memoryState, action);
+  // Notify all hook subscribers.
   listeners.forEach((listener) => {
     listener(memoryState);
   });
@@ -152,6 +164,7 @@ function toast({ ...props }: Toast) {
       id,
       open: true,
       onOpenChange: (open) => {
+        // When Radix closes the toast, trigger store dismissal flow.
         if (!open) dismiss();
       },
     },
@@ -165,11 +178,14 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
+  // Initialize from memory so consumers render current queue immediately.
   const [state, setState] = React.useState<State>(memoryState);
 
   React.useEffect(() => {
+    // Subscribe component to store updates.
     listeners.push(setState);
     return () => {
+      // Cleanup subscription on unmount.
       const index = listeners.indexOf(setState);
       if (index > -1) {
         listeners.splice(index, 1);

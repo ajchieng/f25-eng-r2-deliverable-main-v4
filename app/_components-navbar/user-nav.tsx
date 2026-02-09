@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +32,7 @@ export default function UserNav({ profile }: { profile: Profile }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    // Remove session and ask App Router to refresh server-derived auth UI.
     await supabaseClient.auth.signOut();
     router.refresh();
   };
@@ -36,6 +43,7 @@ export default function UserNav({ profile }: { profile: Profile }) {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             {/* <AvatarImage src="/avatars/01.png" alt="@shadcn" /> */}
+            {/* Fallback avatar uses first two display-name letters. */}
             <AvatarFallback>{profile.display_name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
@@ -67,6 +75,7 @@ export default function UserNav({ profile }: { profile: Profile }) {
         {/* Mark promise as purposefully dangling for clarity: https://github.com/typescript-eslint/typescript-eslint/issues/4619 */}
         <DropdownMenuItem
           onClick={() => {
+            // Execute async sign-out from menu selection.
             void handleSignOut();
           }}
         >

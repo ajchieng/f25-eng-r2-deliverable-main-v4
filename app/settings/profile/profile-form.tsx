@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -93,11 +99,13 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   };
 
   const startEditing = (e: MouseEvent) => {
+    // Keep default button behavior from submitting outer form.
     e.preventDefault();
     setIsEditing(true);
   };
 
   const handleCancel = (e: MouseEvent) => {
+    // Keep default button behavior from submitting outer form.
     e.preventDefault();
     // If edit canceled, reset the form data to the original values which were set from props
     form.reset(defaultValues);
@@ -107,6 +115,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <Form {...form}>
+      {/* RHF submit wrapper ensures zod validation runs before our async handler. */}
       <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)} className="space-y-8">
         <FormField
           control={form.control}
@@ -160,9 +169,11 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
         {/* Conditionally render action buttons depending on if the form is in viewing/editing mode */}
         {isEditing ? (
           <>
+            {/* Save writes to Supabase and exits editing mode on success. */}
             <Button type="submit" className="mr-2">
               Update profile
             </Button>
+            {/* Cancel discards local edits and restores original props-backed values. */}
             <Button variant="secondary" onClick={handleCancel}>
               Cancel
             </Button>

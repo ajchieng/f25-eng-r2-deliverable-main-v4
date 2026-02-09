@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 // Add util functions that should only be run in server components. Importing these in client components will throw an error.
 // For more info on how to avoid poisoning your server/client components: https://www.youtube.com/watch?v=BZlwtR9pDp4
 import { env } from "@/env.mjs";
@@ -8,11 +14,13 @@ import "server-only";
 import { type Database } from "./schema";
 
 export const createServerSupabaseClient = cache(async () => {
+  // Next.js request-scoped cookie store.
   const cookieStore = await cookies();
   const supabase = createServerClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
       get(name: string) {
         try {
+          // Read cookie value for Supabase session hydration.
           return cookieStore.get(name)?.value;
         } catch {
           return undefined;
@@ -20,13 +28,15 @@ export const createServerSupabaseClient = cache(async () => {
       },
       set(name: string, value: string, options) {
         try {
+          // Persist updated auth cookie after token refresh/login.
           cookieStore.set(name, value, options);
         } catch {
           // Cookie setting may fail in some contexts
         }
       },
-      remove(name: string, options) {
+      remove(name: string, _options) {
         try {
+          // Remove cookie on sign-out/session invalidation.
           cookieStore.delete(name);
         } catch {
           // Cookie removal may fail in some contexts

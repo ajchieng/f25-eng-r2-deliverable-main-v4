@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,12 +28,14 @@ import { useRouter } from "next/navigation";
 import { useState, type BaseSyntheticEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ENDANGERMENT_STATUSES, KINGDOMS } from "./types";
 
 // We use zod (z) to define a schema for the "Add species" form.
 // zod handles validation of the input values with methods like .string(), .nullable(). It also processes the form inputs with .transform() before the inputs are sent to the database.
 
 // Define kingdom enum for use in Zod schema and displaying dropdown options in the form
-const kingdoms = z.enum(["Animalia", "Plantae", "Fungi", "Protista", "Archaea", "Bacteria"]);
+const kingdoms = z.enum(KINGDOMS);
+const endangermentStatuses = z.enum(ENDANGERMENT_STATUSES);
 
 // Use Zod to define the shape + requirements of a Species entry; used in form validation
 const speciesSchema = z.object({
@@ -35,20 +43,21 @@ const speciesSchema = z.object({
     .string()
     .trim()
     .min(1)
-    .transform((val) => val?.trim()),
+    .transform((val) => val.trim()),
   common_name: z
     .string()
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
   kingdom: kingdoms,
+  endangerment_status: endangermentStatuses,
   total_population: z.number().int().positive().min(1).nullable(),
   image: z
     .string()
-    .url()
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
-    .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    .transform((val) => (!val || val.trim() === "" ? null : val.trim()))
+    .refine((val) => val === null || z.string().url().safeParse(val).success, "Please enter a valid image URL."),
   description: z
     .string()
     .nullable()
@@ -69,6 +78,7 @@ const defaultValues: Partial<FormData> = {
   scientific_name: "",
   common_name: null,
   kingdom: "Animalia",
+  endangerment_status: "Not Evaluated",
   total_population: null,
   image: null,
   description: null,
@@ -90,12 +100,14 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
   const onSubmit = async (input: FormData) => {
     // The `input` prop contains data that has already been processed by zod. We can now use it in a supabase query
     const supabase = createBrowserSupabaseClient();
+    // Insert one new species row attributed to the current signed-in user.
     const { error } = await supabase.from("species").insert([
       {
         author: userId,
         common_name: input.common_name,
         description: input.description,
         kingdom: input.kingdom,
+        endangerment_status: input.endangerment_status,
         scientific_name: input.scientific_name,
         total_population: input.total_population,
         image: input.image,
@@ -130,6 +142,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
   };
 
   return (
+    // Keep dialog open state controlled so it can be closed after successful submit.
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="secondary">
@@ -145,8 +158,10 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
+          {/* React Hook Form handles validation lifecycle; zodResolver enforces schema rules. */}
           <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)}>
             <div className="grid w-full items-center gap-4">
+              {/* Required scientific-name field. */}
               <FormField
                 control={form.control}
                 name="scientific_name"
@@ -154,7 +169,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                   <FormItem>
                     <FormLabel>Scientific Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Cavia porcellus" {...field} />
+                      <Input placeholder="Enter scientific name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,7 +185,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                     <FormItem>
                       <FormLabel>Common Name</FormLabel>
                       <FormControl>
-                        <Input value={value ?? ""} placeholder="Guinea pig" {...rest} />
+                        <Input value={value ?? ""} placeholder="Enter common name (optional)" {...rest} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -191,9 +206,35 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                       </FormControl>
                       <SelectContent>
                         <SelectGroup>
-                          {kingdoms.options.map((kingdom, index) => (
-                            <SelectItem key={index} value={kingdom}>
+                          {kingdoms.options.map((kingdom) => (
+                            <SelectItem key={kingdom} value={kingdom}>
                               {kingdom}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endangerment_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endangerment status</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(endangermentStatuses.parse(value))} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select endangerment status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          {endangermentStatuses.options.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -218,7 +259,11 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                           value={value ?? ""}
                           placeholder="300000"
                           {...rest}
-                          onChange={(event) => field.onChange(+event.target.value)}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            // Store null instead of empty string to match DB schema for optional number.
+                            field.onChange(nextValue === "" ? null : Number(nextValue));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -230,16 +275,17 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                 control={form.control}
                 name="image"
                 render={({ field }) => {
-                  // We must extract value from field and convert a potential defaultValue of `null` to "" because inputs can't handle null values: https://github.com/orgs/react-hook-form/discussions/4091
-                  const { value, ...rest } = field;
                   return (
                     <FormItem>
                       <FormLabel>Image URL</FormLabel>
                       <FormControl>
                         <Input
-                          value={value ?? ""}
-                          placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/George_the_amazing_guinea_pig.jpg/440px-George_the_amazing_guinea_pig.jpg"
-                          {...rest}
+                          value={field.value ?? ""}
+                          placeholder="https://example.com/species-image.jpg"
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormMessage />
@@ -259,7 +305,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                       <FormControl>
                         <Textarea
                           value={value ?? ""}
-                          placeholder="The guinea pig or domestic guinea pig, also known as the cavy or domestic cavy, is a species of rodent belonging to the genus Cavia in the family Caviidae."
+                          placeholder="Describe the species, habitat, and notable traits."
                           {...rest}
                         />
                       </FormControl>
@@ -269,7 +315,8 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                 }}
               />
               <div className="flex">
-                <Button type="submit" className="ml-1 mr-1 flex-auto">
+                {/* Disable submit during async request to prevent duplicate inserts. */}
+                <Button type="submit" className="ml-1 mr-1 flex-auto" disabled={form.formState.isSubmitting}>
                   Add Species
                 </Button>
                 <DialogClose asChild>

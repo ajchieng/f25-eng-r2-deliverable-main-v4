@@ -1,11 +1,18 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Re-export Radix menu primitives with shared styling.
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
@@ -24,6 +31,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
     inset?: boolean;
   }
 >(({ className, inset, children, ...props }, ref) => (
+  // Trigger for nested submenus.
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
@@ -43,6 +51,7 @@ const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
+  // Floating panel for nested submenu content.
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
@@ -59,6 +68,7 @@ const DropdownMenuContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, sideOffset = 4, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
+    {/* Main dropdown content container. */}
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
@@ -78,6 +88,7 @@ const DropdownMenuItem = React.forwardRef<
     inset?: boolean;
   }
 >(({ className, inset, ...props }, ref) => (
+  // Standard clickable item row.
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -94,6 +105,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => (
+  // Checkbox-style selectable row.
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
@@ -117,6 +129,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => (
+  // Radio-style selectable row.
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(

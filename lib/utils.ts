@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 // Add util functions that can be used in both server and client components.
 // For more info on how to avoid poisoning your server/client components: https://www.youtube.com/watch?v=BZlwtR9pDp4
 import { clsx, type ClassValue } from "clsx";
@@ -8,6 +14,7 @@ import { twMerge } from "tailwind-merge";
 // More usage: https://www.neorepo.com/blog/how-to-build-a-button-with-nextjs-and-shadcn-ui
 
 export function cn(...inputs: ClassValue[]) {
+  // `clsx` builds class list; `twMerge` resolves conflicting Tailwind utilities.
   return twMerge(clsx(inputs));
 }
 
@@ -15,6 +22,7 @@ export function cn(...inputs: ClassValue[]) {
 // https://alvarotrigo.com/blog/wait-1-second-javascript/
 export function delay(milliseconds: number) {
   return new Promise((resolve) => {
+    // Resolve after timeout elapses.
     setTimeout(resolve, milliseconds);
   });
 }

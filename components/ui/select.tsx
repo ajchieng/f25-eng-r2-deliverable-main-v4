@@ -1,11 +1,18 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Re-export Radix select primitives with project styling defaults.
 const Select = SelectPrimitive.Root;
 
 const SelectGroup = SelectPrimitive.Group;
@@ -16,6 +23,7 @@ const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
+  // Trigger button that displays selected value.
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -37,6 +45,7 @@ const SelectContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, ref) => (
   <SelectPrimitive.Portal>
+    {/* Floating menu content rendered in a portal. */}
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
@@ -49,6 +58,7 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectPrimitive.Viewport
+        // Viewport adjusts to trigger dimensions in popper mode.
         className={cn(
           "p-1",
           position === "popper" &&
@@ -74,6 +84,7 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => (
+  // Individual selectable option row.
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
@@ -83,6 +94,7 @@ const SelectItem = React.forwardRef<
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      {/* Check icon appears for currently selected item. */}
       <SelectPrimitive.ItemIndicator>
         <Check className="h-4 w-4" />
       </SelectPrimitive.ItemIndicator>

@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { Button } from "@/components/ui/button";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
 import { LogOut } from "lucide-react";
@@ -10,6 +16,7 @@ export default function LogoutButton() {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    // Clear Supabase auth session and re-render server components.
     await supabaseClient.auth.signOut();
     router.refresh();
   };
@@ -18,6 +25,7 @@ export default function LogoutButton() {
     <Button
       variant="ghost"
       onClick={() => {
+        // Explicitly ignore returned promise in click handler context.
         void handleSignOut();
       }}
     >

@@ -1,0 +1,153 @@
+name,speed,body_mass
+Aardvark,40.0,65.0
+Aardwolf,40.0,14.0
+African Elephant,40.0,6000.0
+African Lion,80.0,250.0
+African Wild Dog,56.0,36.0
+Alpine Ibex,60.0,120.0
+Amazon Rainforest Frog,0.8,0.5
+American Bison,56.0,318.0
+Arabian Horse,65.0,1000.0
+Arabian Oryx,55.0,90.0
+Arctic Fox,60.0,9.0
+Arowana,32.0,6.7
+Asian Elephant,40.0,5000.0
+Atlantic Puffin,80.0,620.0
+Atlantic Spotted Dolphin,52.0,140.0
+Australian Fur Seal,32.0,40.0
+Axolotl,0.25,300.0
+Aye-Aye,32.0,2.7
+Baird's Tapir,48.0,400.0
+Bald Eagle,120.0,6.0
+Banded Palm Civet,16.0,5.0
+Barbary Macaque,30.0,13.0
+Bearded Dragon,52.0,600.0
+Bengal Fox,40.0,4.0
+Bengal Tiger,65.0,260.0
+Black Rhinoceros,56.0,800.0
+Blue Jay,32.0,0.12
+Blue Whale,39.0,200.0
+Blue-Footed Booby,30.0,3.0
+Bonobo,50.0,40.0
+Bornean Orangutan,52.0,82.0
+Bottlenose Dolphin,64.0,650.0
+Boxer Dog,64.0,32.0
+Brown Bear,48.0,780.0
+Burmese Python,2.0,90.0
+Capybara,35.0,66.0
+Cheetah,112.0,72.0
+Chimpanzee,40.0,70.0
+Clownfish,1.6,300.0
+Common Dolphin,60.0,135.0
+Coquerel's Sifaka,30.0,6.0
+Dalmatian Dog,37.0,32.0
+Dhole,56.0,21.0
+Dingo,56.0,20.0
+Dugong,27.0,420.0
+Eastern Gorilla,40.0,204.0
+Echidna,36.0,6.5
+Electric Eel,4.8,20.0
+Emperor Penguin,9.0,45.0
+Emperor Tamarin,32.0,400.0
+European Hedgehog,5.0,1.2
+Fennec Fox,32.0,1.6
+Fire Salamander,0.8,55.0
+Flying Fox,45.0,1.1
+Fossa,46.5,8.0
+Frilled Lizard,29.0,0.5
+GalÃ¡pagos Penguin,29.5,2.5
+Galápagos Penguin,35.0,2.6
+Galápagos Tortoise,0.3,417.0
+Gaur,35.0,1300.0
+Gerenuk,95.0,52.0
+Gharial,32.0,1500.0
+Giant Pacific Octopus,24.0,25.0
+Giant Panda,32.0,125.0
+Golden Lion Tamarin,10.5,0.7
+Great White Shark,56.0,2268.0
+Green Anaconda,24.0,97.5
+Green Sea Turtle,35.0,195.0
+Grevy's Zebra,64.0,450.0
+Harp Seal,28.0,160.0
+Harpy Eagle,50.0,9.0
+Hippopotamus,30.0,3200.0
+Hummingbird,80.0,20.0
+Humpback Whale,25.5,30000.0
+Iberian Lynx,75.0,14.0
+Indri,25.5,6.0
+Japanese Macaque,30.0,14.0
+Kakapo,2.4,4.0
+Kangaroo Rat,16.0,0.15
+King Cobra,20.0,9.0
+Kiwi,9.0,3.3
+Komodo Dragon,20.0,90.0
+Lemur,29.0,4.0
+Manatee,8.0,590.0
+Maned Wolf,56.0,25.0
+Mantis Shrimp,40.0,2.7
+Markhor,52.0,110.0
+Meerkat,32.0,1.0
+Mountain Gorilla,40.0,200.0
+Narwhal,45.0,1600.0
+Numbat,8.0,1.0
+Okapi,58.0,350.0
+Orangutan,40.0,82.0
+Pangolin,32.0,40.0
+Patagonian Mara,30.0,16.0
+Platypus,9.0,2.4
+Polar Bear,40.0,700.0
+Potoo,20.0,1.0
+Proboscis Monkey,28.0,24.0
+Pronghorn,88.5,70.0
+Pufferfish,8.0,0.8
+Quokka,24.0,5.0
+Red Fox,48.0,7.0
+Red Kangaroo,56.0,95.0
+Red Panda,0.30000000000000004,6.0
+Rottweiler,32.0,60.0
+Saola,26.0,100.0
+Secretary Bird,32.0,4.5
+Serval,44.0,18.0
+Shoebill,15.0,6.0
+Shortfin Mako Shark,45.0,800.0
+Siberian Husky,48.0,27.0
+Sloth,0.135,9.0
+Snow Leopard,50.0,75.0
+Snowy Owl,80.0,3.3
+Spectacled Bear,45.0,77.0
+Sperm Whale,60.0,57000.0
+Spider Monkey,45.0,9.0
+Spotted Hyena,56.0,64.0
+Squirrel Monkey,30.0,1.0
+Star-Nosed Mole,1.2,0.06
+Sumatran Orangutan,35.0,56.0
+Sumatran Rhino,40.0,950.0
+Sumatran Rhinoceros,40.0,950.0
+Sun Bear,44.0,80.0
+Tapir,48.0,400.0
+Tarsier,45.0,0.2
+Tasmanian Devil,16.0,14.0
+Tasmanian Tiger,56.0,30.0
+Three-Toed Sloth,20.0,8.0
+Tibetan Mastiff,45.0,75.0
+Tiger,28.0,390.0
+Titanoboa,27.0,24950.0
+Toco Toucan,60.0,700.0
+Tree Kangaroo,30.0,8.0
+Tufted Puffin,17.0,1.0
+Uakari,20.0,3.0
+Vampire Bat,32.0,0.05
+Western Gorilla,40.0,182.0
+Western Lowland Gorilla,40.0,181.0
+Whale Shark,70.0,1500.0
+White Rhinoceros,45.0,2500.0
+White Tiger,22.0,300.0
+Wild Boar,20.0,120.0
+Wildebeest,47.0,390.0
+Wolf,45.0,80.0
+Wolverine,63.0,25.0
+Wombat,20.0,35.0
+Yak,24.0,1200.0
+Yellow-Eyed Penguin,25.0,3.0
+Zebra,25.0,900.0
+Zebra Shark,20.0,32.0

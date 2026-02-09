@@ -1,26 +1,97 @@
-/* eslint-disable */
 "use client";
+
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
 import { TypographyH2, TypographyP } from "@/components/ui/typography";
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
+interface ChatMessage {
+  role: "user" | "bot";
+  content: string;
+}
+
 export default function SpeciesChatbot() {
+  // Ref used to auto-resize textarea height as user types.
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Input text currently in composer.
   const [message, setMessage] = useState("");
-  const [chatLog, setChatLog] = useState<{ role: "user" | "bot"; content: string }[]>([]);
+  // Chronological conversation history.
+  const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
+  // Loading flag to disable input while waiting for API response.
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (textarea) {
+      // Reset and then grow to content height for smooth autoresize.
       textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   };
 
-const handleSubmit = async () => {
-  // TODO: Implement this function
-}
+  const handleSubmit = async () => {
+    // Prevent duplicate requests from repeated clicks/keypresses.
+    if (isLoading) {
+      return;
+    }
 
-return (
+    // Ignore empty/whitespace-only messages.
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
+      return;
+    }
+
+    // Optimistically append user message immediately.
+    setChatLog((prev) => [...prev, { role: "user", content: trimmedMessage }]);
+    setMessage("");
+    setIsLoading(true);
+
+    if (textareaRef.current) {
+      // Reset composer height after send.
+      textareaRef.current.style.height = "auto";
+    }
+
+    try {
+      // Backend route handles provider call + topic restrictions.
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: trimmedMessage }),
+      });
+
+      const payload = (await response.json()) as { response?: string; error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Failed to get a response from the chatbot.");
+      }
+
+      // Append assistant response to chat transcript.
+      const botMessage = payload.response?.trim() ?? "I couldn't generate a response right now.";
+      setChatLog((prev) => [...prev, { role: "bot", content: botMessage }]);
+    } catch (error) {
+      // Show user-visible fallback message in transcript on failures.
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong while contacting the chatbot.";
+      setChatLog((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          content: `I ran into an issue processing that request: ${errorMessage}`,
+        },
+      ]);
+    } finally {
+      // Re-enable input controls regardless of success/failure.
+      setIsLoading(false);
+    }
+  };
+
+  return (
     <>
       <TypographyH2>Species Chatbot</TypographyH2>
       <div className="mt-4 flex gap-4">
@@ -66,6 +137,14 @@ return (
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onInput={handleInput}
+            onKeyDown={(event) => {
+              // Enter submits, Shift+Enter inserts newline.
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                void handleSubmit();
+              }
+            }}
+            disabled={isLoading}
             rows={1}
             placeholder="Ask about a species..."
             className="w-full resize-none overflow-hidden rounded border border-border bg-background p-2 text-sm text-foreground focus:outline-none"
@@ -73,9 +152,10 @@ return (
           <button
             type="button"
             onClick={() => void handleSubmit()}
+            disabled={isLoading}
             className="mt-2 rounded bg-primary px-4 py-2 text-background transition hover:opacity-90"
           >
-            Enter
+            {isLoading ? "Thinking..." : "Enter"}
           </button>
         </div>
       </div>

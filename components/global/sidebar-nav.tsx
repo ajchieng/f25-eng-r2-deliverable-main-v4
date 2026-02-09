@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,6 +20,7 @@ interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
+  // Current pathname determines which sidebar item is highlighted as active.
   const pathname = usePathname();
 
   return (
@@ -23,7 +30,9 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
           key={item.href}
           href={item.href}
           className={cn(
+            // Start from shared ghost-button styling for consistent interactive affordance.
             buttonVariants({ variant: "ghost" }),
+            // Apply active styling only when route exactly matches current path.
             pathname === item.href ? "bg-muted hover:bg-muted" : "hover:bg-transparent hover:underline",
             "justify-start",
           )}

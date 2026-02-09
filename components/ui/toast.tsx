@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import * as ToastPrimitives from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
@@ -5,12 +11,14 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Root provider from Radix; wraps app once in `Toaster`.
 const ToastProvider = ToastPrimitives.Provider;
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
 >(({ className, ...props }, ref) => (
+  // Positioned container where toasts stack.
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
@@ -41,6 +49,7 @@ const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
+  // Apply variant class set and forward remaining Radix props.
   return <ToastPrimitives.Root ref={ref} className={cn(toastVariants({ variant }), className)} {...props} />;
 });
 Toast.displayName = ToastPrimitives.Root.displayName;
@@ -49,6 +58,7 @@ const ToastAction = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Action>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
 >(({ className, ...props }, ref) => (
+  // Optional per-toast action button (e.g., Undo).
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
@@ -64,6 +74,7 @@ const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
 >(({ className, ...props }, ref) => (
+  // Dismiss button rendered in top-right of each toast.
   <ToastPrimitives.Close
     ref={ref}
     className={cn(

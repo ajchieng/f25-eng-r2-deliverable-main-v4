@@ -3,10 +3,13 @@
 
 do $$
 declare
+  -- Reuse the first available profile id as author for all seed rows.
   user_id uuid;
 begin
+  -- Pull one existing profile id; required because author is non-null + foreign-keyed.
   select id from profiles limit 1 into user_id;
 
+  -- Insert a starter set of species records used for UI testing/demo data.
   insert into
   species(scientific_name,	common_name,	total_population,	kingdom,	description,	author,	image)
   values

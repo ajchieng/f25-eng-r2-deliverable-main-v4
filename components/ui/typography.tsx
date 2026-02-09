@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { cn } from "@/lib/utils";
 import React, { type ComponentPropsWithoutRef } from "react";
 
@@ -5,9 +11,10 @@ import React, { type ComponentPropsWithoutRef } from "react";
 
 export const TypographyH1 = React.forwardRef<HTMLHeadingElement, ComponentPropsWithoutRef<"h1">>(
   ({ className, ...props }, ref) => (
+    // Primary heading style used for page-level titles.
     <h1
       ref={ref}
-      className={cn("scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl", className)}
+      className={cn("font-display scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl", className)}
       {...props}
     />
   ),
@@ -17,9 +24,13 @@ TypographyH1.displayName = "TypographyH1";
 // Class 'border-b' was removed from the original shadcn/ui element. You can add it back in with a classname at the component level
 export const TypographyH2 = React.forwardRef<HTMLHeadingElement, ComponentPropsWithoutRef<"h2">>(
   ({ className, ...props }, ref) => (
+    // Secondary heading style.
     <h2
       ref={ref}
-      className={cn("scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0", className)}
+      className={cn(
+        "font-display scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0",
+        className,
+      )}
       {...props}
     />
   ),
@@ -28,14 +39,22 @@ TypographyH2.displayName = "TypographyH2";
 
 export const TypographyH3 = React.forwardRef<HTMLHeadingElement, ComponentPropsWithoutRef<"h3">>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("scroll-m-20 text-2xl font-semibold tracking-tight", className)} {...props} />
+    <h3
+      ref={ref}
+      className={cn("font-display scroll-m-20 text-2xl font-semibold tracking-tight", className)}
+      {...props}
+    />
   ),
 );
 TypographyH3.displayName = "TypographyH3";
 
 export const TypographyH4 = React.forwardRef<HTMLHeadingElement, ComponentPropsWithoutRef<"h4">>(
   ({ className, ...props }, ref) => (
-    <h4 ref={ref} className={cn("scroll-m-20 text-xl font-semibold tracking-tight", className)} {...props} />
+    <h4
+      ref={ref}
+      className={cn("font-display scroll-m-20 text-xl font-semibold tracking-tight", className)}
+      {...props}
+    />
   ),
 );
 TypographyH4.displayName = "TypographyH4";
@@ -65,6 +84,7 @@ export const TypographyTable = <H extends string[]>({
   rows: [...{ [I in keyof H]: string[] }];
 }) => {
   return (
+    // Scroll wrapper prevents table overflow on smaller screens.
     <div className="my-6 w-full overflow-y-auto">
       <table className="w-full">
         <thead>
@@ -100,6 +120,7 @@ export const TypographyTable = <H extends string[]>({
 
 export function TypographyList({ items }: { items: string[] }) {
   return (
+    // Bulleted list helper component.
     <ul className="my-6 ml-6 list-disc [&>li]:mt-2">
       {items.map((item) => (
         <li key={item}>item</li>
@@ -110,6 +131,7 @@ export function TypographyList({ items }: { items: string[] }) {
 
 export const TypographyInlineCode = React.forwardRef<HTMLElement, ComponentPropsWithoutRef<"code">>(
   ({ className, ...props }, ref) => (
+    // Inline code chip styling.
     <code
       ref={ref}
       className={cn("relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold", className)}
@@ -147,7 +169,7 @@ TypographyMuted.displayName = "TypographyMuted";
 
 export const PageHeader1 = React.forwardRef<HTMLHeadingElement, ComponentPropsWithoutRef<"h2">>(
   ({ className, ...props }, ref) => (
-    <h2 ref={ref} className={cn("text-2xl font-bold tracking-tight", className)} {...props} />
+    <h2 ref={ref} className={cn("font-display text-2xl font-bold tracking-tight", className)} {...props} />
   ),
 );
 PageHeader1.displayName = "PageHeader1";
@@ -158,7 +180,9 @@ export const PageSubHeader1 = React.forwardRef<HTMLParagraphElement, ComponentPr
 PageSubHeader1.displayName = "PageSubHeader1";
 
 export const PageHeader2 = React.forwardRef<HTMLHeadingElement, ComponentPropsWithoutRef<"h3">>(
-  ({ className, ...props }, ref) => <h3 ref={ref} className={cn("text-lg font-medium", className)} {...props} />,
+  ({ className, ...props }, ref) => (
+    <h3 ref={ref} className={cn("font-display text-lg font-medium", className)} {...props} />
+  ),
 );
 PageHeader2.displayName = "PageHeader2";
 

@@ -1,3 +1,9 @@
+/**
+ * File overview:
+ * Contains UI or data logic for a specific feature in Biodiversity Hub.
+ * Main exports here are consumed by Next.js routes or shared components.
+ */
+
 import { Separator } from "@/components/ui/separator";
 import { createServerSupabaseClient } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
@@ -6,6 +12,7 @@ import ProfileForm from "./profile-form";
 function SettingsError({ message }: { message: string }) {
   return (
     <>
+      {/* Small inline fallback UI for profile-fetch failures. */}
       <h3 className="text-lg font-medium">Error</h3>
       <p>{message}</p>
     </>
@@ -23,6 +30,7 @@ export default async function Settings() {
     redirect("/");
   }
 
+  // Fetch current user's profile row for editable defaults.
   const { data, error } = await supabase.from("profiles").select().eq("id", user.id);
 
   if (error) {
@@ -45,6 +53,7 @@ export default async function Settings() {
 
   return (
     <>
+      {/* Intro copy + editable form section. */}
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-medium">Profile</h3>
