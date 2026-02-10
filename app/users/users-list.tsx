@@ -99,6 +99,7 @@ export default function UsersList({ profiles, currentUserId }: { profiles: Profi
         const isCurrentUser = profile.id === currentUserId;
         const isEditingCard = isCurrentUser && isEditingOwnBiography;
         const originalBiography = currentUserProfile?.biography ?? "";
+        // Avoid unnecessary UPDATE queries when the normalized text has not changed.
         const isUnchanged = biographyDraft.trim() === originalBiography.trim();
 
         return (

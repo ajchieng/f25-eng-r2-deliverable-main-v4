@@ -652,6 +652,7 @@ export default function AnimalSpeedGraph() {
         };
       }).filter((summary) => summary.count > 0);
 
+      // Prefer statuses with enough samples so tiny categories do not dominate the headline insight.
       const primarySummaries = statusSummaries.filter((summary) => summary.count >= 5);
       const analysisSummaries = primarySummaries.length >= 2 ? primarySummaries : statusSummaries;
 

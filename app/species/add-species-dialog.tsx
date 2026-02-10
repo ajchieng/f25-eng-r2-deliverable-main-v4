@@ -100,7 +100,9 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
 
   // Control open/closed state of the dialog
   const [open, setOpen] = useState<boolean>(false);
+  // Keep lookup text separate from form fields so users can run multiple searches safely.
   const [wikiQuery, setWikiQuery] = useState<string>("");
+  // Search-specific loading state prevents duplicate Wikipedia requests.
   const [isSearchingWikipedia, setIsSearchingWikipedia] = useState<boolean>(false);
 
   // Instantiate form functionality with React Hook Form, passing in the Zod schema (for validation) and default values
@@ -167,6 +169,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
     setIsSearchingWikipedia(true);
 
     try {
+      // `summary/{title}` returns short text + image metadata for a single article title.
       const response = await fetch(
         `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(trimmedQuery)}`,
         {
@@ -189,6 +192,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
       const data = (await response.json()) as WikipediaSummaryResponse;
       const isNotFound = data.type === "https://mediawiki.org/wiki/HyperSwitch/errors/not_found";
       const description = data.extract?.trim() ?? "";
+      // Prefer higher-resolution image when present, otherwise use thumbnail.
       const imageUrl = data.originalimage?.source ?? data.thumbnail?.source ?? null;
 
       if (isNotFound || !description) {
@@ -199,6 +203,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
         });
       }
 
+      // Mark values as dirty/touched so RHF validation and UI state update immediately.
       form.setValue("description", description, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       form.setValue("image", imageUrl, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
 

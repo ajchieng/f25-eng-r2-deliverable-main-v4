@@ -122,6 +122,7 @@ export default function SpeciesComments({ speciesId, currentUserId, comments }: 
     // Keep deletion state per comment for button-level loading text.
     setDeletingCommentId(commentId);
     const supabase = createBrowserSupabaseClient();
+    // Author filter ensures users can only remove their own comments from this client path.
     const { error } = await supabase.from("comments").delete().eq("id", commentId).eq("author", currentUserId);
     setDeletingCommentId(null);
 
@@ -171,6 +172,7 @@ export default function SpeciesComments({ speciesId, currentUserId, comments }: 
           {sortedComments.map((comment) => {
             const isOwner = comment.author === currentUserId;
             const isDeletingThisComment = deletingCommentId === comment.id;
+            // Prefer display_name, then a fallback label for own comments, then email.
             const authorName =
               comment.author_profile?.display_name ??
               (isOwner ? "You" : comment.author_profile?.email) ??

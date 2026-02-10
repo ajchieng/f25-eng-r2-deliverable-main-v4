@@ -48,6 +48,7 @@ export default async function SpeciesPage() {
     supabase.from("species_bookmarks").select("species_id").eq("user_id", sessionId),
   ]);
 
+  // Set lookup keeps bookmark membership checks O(1) while mapping species rows.
   const bookmarkIds = new Set<number>(
     (speciesBookmarks ?? []).map((bookmark: Pick<SpeciesBookmark, "species_id">) => bookmark.species_id),
   );

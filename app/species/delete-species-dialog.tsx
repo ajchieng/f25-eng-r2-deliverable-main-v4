@@ -35,6 +35,7 @@ export default function DeleteSpeciesDialog({ speciesId, scientificName, userId 
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
+    // Lock controls immediately so a double-click cannot issue duplicate DELETE requests.
     setIsDeleting(true);
     const supabase = createBrowserSupabaseClient();
     // Owner check is duplicated server-side via RLS; this is defense-in-depth on query.
@@ -70,7 +71,8 @@ export default function DeleteSpeciesDialog({ speciesId, scientificName, userId 
           {/* Confirmation copy includes species name for clarity. */}
           <DialogTitle>Delete this species?</DialogTitle>
           <DialogDescription>
-            This action cannot be undone. This will permanently remove <span className="font-medium">{scientificName}</span>.
+            This action cannot be undone. This will permanently remove{" "}
+            <span className="font-medium">{scientificName}</span>.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

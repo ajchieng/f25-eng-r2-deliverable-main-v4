@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     return invalidBodyResponse();
   }
 
+  // Treat whitespace-only payloads as invalid so downstream model calls are never empty.
   const message = body.message.trim();
   if (!message) {
     return invalidBodyResponse();
