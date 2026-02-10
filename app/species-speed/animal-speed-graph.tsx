@@ -18,7 +18,7 @@ import { axisBottom, axisLeft } from "d3-axis";
 import { csv } from "d3-fetch";
 import { scaleBand, scaleLinear, scaleLog, scaleOrdinal } from "d3-scale";
 import { select, type Selection } from "d3-selection";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Allowed diet values for validation + chart ordering.
 type Diet = "herbivore" | "omnivore" | "carnivore";
@@ -114,6 +114,33 @@ function deterministicJitter(index: number, spread: number) {
   const seed = Math.sin((index + 1) * 12.9898) * 43758.5453;
   const fractional = seed - Math.floor(seed);
   return (fractional - 0.5) * spread;
+}
+
+function calculateMeanSpeed(rows: { speed: number }[]) {
+  return rows.reduce((sum, row) => sum + row.speed, 0) / rows.length;
+}
+
+function pearsonCorrelation(xValues: number[], yValues: number[]) {
+  if (xValues.length !== yValues.length || xValues.length < 2) return null;
+
+  const sampleSize = xValues.length;
+  const xMean = xValues.reduce((sum, value) => sum + value, 0) / sampleSize;
+  const yMean = yValues.reduce((sum, value) => sum + value, 0) / sampleSize;
+
+  let covariance = 0;
+  let xVariance = 0;
+  let yVariance = 0;
+
+  for (let index = 0; index < sampleSize; index += 1) {
+    const centeredX = xValues[index]! - xMean;
+    const centeredY = yValues[index]! - yMean;
+    covariance += centeredX * centeredY;
+    xVariance += centeredX ** 2;
+    yVariance += centeredY ** 2;
+  }
+
+  if (!xVariance || !yVariance) return null;
+  return covariance / Math.sqrt(xVariance * yVariance);
 }
 
 /**
@@ -553,6 +580,100 @@ export default function AnimalSpeedGraph() {
   // Shared error message displayed when any CSV fails to load.
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
+  const analysisPoints = useMemo(() => {
+    const points: string[] = [];
+
+    if (dietData.length) {
+      const dietSummaries = DIET_ORDER.map((diet) => {
+        const rows = dietData.filter((datum) => datum.diet === diet);
+        return {
+          diet,
+          count: rows.length,
+          averageSpeed: rows.length ? calculateMeanSpeed(rows) : 0,
+        };
+      }).filter((summary) => summary.count > 0);
+
+      if (dietSummaries.length >= 2) {
+        const sortedBySpeed = [...dietSummaries].sort((a, b) => b.averageSpeed - a.averageSpeed);
+        const fastestDiet = sortedBySpeed[0]!;
+        const slowestDiet = sortedBySpeed[sortedBySpeed.length - 1]!;
+        const speedGap = fastestDiet.averageSpeed - slowestDiet.averageSpeed;
+
+        points.push(
+          `Diet: ${fastestDiet.diet} species average ${fastestDiet.averageSpeed.toFixed(
+            1,
+          )} km/h (n=${fastestDiet.count}), which is ${speedGap.toFixed(1)} km/h faster than ${slowestDiet.diet} species (${slowestDiet.averageSpeed.toFixed(1)} km/h, n=${slowestDiet.count}).`,
+        );
+      }
+    }
+
+    if (weightData.length >= 2) {
+      const fastestSpecies = weightData.reduce((currentBest, datum) =>
+        datum.speed > currentBest.speed ? datum : currentBest,
+      );
+      const lightestSpecies = weightData.reduce((currentLightest, datum) =>
+        datum.bodyMass < currentLightest.bodyMass ? datum : currentLightest,
+      );
+      const heaviestSpecies = weightData.reduce((currentHeaviest, datum) =>
+        datum.bodyMass > currentHeaviest.bodyMass ? datum : currentHeaviest,
+      );
+
+      const massSpeedCorrelation = pearsonCorrelation(
+        weightData.map((datum) => Math.log10(datum.bodyMass)),
+        weightData.map((datum) => datum.speed),
+      );
+
+      const trendLabel =
+        massSpeedCorrelation === null
+          ? "no measurable mass-speed trend"
+          : massSpeedCorrelation > 0.2
+            ? "a weak positive mass-speed trend"
+            : massSpeedCorrelation < -0.2
+              ? "a weak negative mass-speed trend"
+              : "a very weak mass-speed trend";
+
+      const correlationText =
+        massSpeedCorrelation === null ? "" : ` (r=${massSpeedCorrelation.toFixed(2)} on log mass)`;
+
+      points.push(
+        `Weight: body mass spans from ${lightestSpecies.bodyMass.toFixed(2)} kg (${lightestSpecies.name}) to ${heaviestSpecies.bodyMass.toFixed(
+          0,
+        )} kg (${heaviestSpecies.name}), with ${trendLabel}${correlationText}; the fastest species in this view is ${fastestSpecies.name} at ${fastestSpecies.speed.toFixed(1)} km/h.`,
+      );
+    }
+
+    if (endangermentData.length) {
+      const statusSummaries = ENDANGERMENT_ORDER.map((status) => {
+        const rows = endangermentData.filter((datum) => datum.endangerment === status);
+        return {
+          status,
+          count: rows.length,
+          averageSpeed: rows.length ? calculateMeanSpeed(rows) : 0,
+        };
+      }).filter((summary) => summary.count > 0);
+
+      const primarySummaries = statusSummaries.filter((summary) => summary.count >= 5);
+      const analysisSummaries = primarySummaries.length >= 2 ? primarySummaries : statusSummaries;
+
+      if (analysisSummaries.length >= 2) {
+        const sortedBySpeed = [...analysisSummaries].sort((a, b) => b.averageSpeed - a.averageSpeed);
+        const fastestStatus = sortedBySpeed[0]!;
+        const slowestStatus = sortedBySpeed[sortedBySpeed.length - 1]!;
+        const speedGap = fastestStatus.averageSpeed - slowestStatus.averageSpeed;
+
+        points.push(
+          `Endangerment: ${fastestStatus.status} species average ${fastestStatus.averageSpeed.toFixed(
+            1,
+          )} km/h (n=${fastestStatus.count}), compared with ${slowestStatus.averageSpeed.toFixed(1)} km/h for ${slowestStatus.status} species (n=${slowestStatus.count}), a ${speedGap.toFixed(
+            1,
+          )} km/h gap.`,
+        );
+      }
+    }
+
+    return points;
+  }, [dietData, endangermentData, weightData]);
+
   // Load and normalize all CSV files exactly once on mount.
   useEffect(() => {
     // Protect state updates if component unmounts before async work finishes.
@@ -643,6 +764,17 @@ export default function AnimalSpeedGraph() {
       {/* Surface CSV/data loading failures above all chart sections. */}
       {loadingError ? (
         <p className="rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-100">{loadingError}</p>
+      ) : null}
+
+      {analysisPoints.length ? (
+        <section className="rounded-md border border-border/60 bg-muted/30 p-4">
+          <h3 className="text-base font-semibold">Analysis</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {analysisPoints.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {/* Chart section 1: diet comparison. */}

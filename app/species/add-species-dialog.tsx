@@ -67,6 +67,17 @@ const speciesSchema = z.object({
 
 type FormData = z.infer<typeof speciesSchema>;
 
+interface WikipediaSummaryResponse {
+  type?: string;
+  extract?: string;
+  originalimage?: {
+    source?: string;
+  };
+  thumbnail?: {
+    source?: string;
+  };
+}
+
 // Default values for the form fields.
 /* Because the react-hook-form (RHF) used here is a controlled form (not an uncontrolled form),
 fields that are nullable/not required should explicitly be set to `null` by default.
@@ -89,6 +100,8 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
 
   // Control open/closed state of the dialog
   const [open, setOpen] = useState<boolean>(false);
+  const [wikiQuery, setWikiQuery] = useState<string>("");
+  const [isSearchingWikipedia, setIsSearchingWikipedia] = useState<boolean>(false);
 
   // Instantiate form functionality with React Hook Form, passing in the Zod schema (for validation) and default values
   const form = useForm<FormData>({
@@ -141,6 +154,70 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
     });
   };
 
+  const handleWikipediaSearch = async () => {
+    const trimmedQuery = wikiQuery.trim();
+
+    if (!trimmedQuery) {
+      return toast({
+        title: "Enter a species name first.",
+        description: "Search by scientific or common name to autofill description and image.",
+      });
+    }
+
+    setIsSearchingWikipedia(true);
+
+    try {
+      const response = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(trimmedQuery)}`,
+        {
+          headers: { Accept: "application/json" },
+        },
+      );
+
+      if (response.status === 404) {
+        return toast({
+          title: "No Wikipedia article found.",
+          description: `No matching article was found for "${trimmedQuery}".`,
+          variant: "destructive",
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`Wikipedia request failed with status ${response.status}.`);
+      }
+
+      const data = (await response.json()) as WikipediaSummaryResponse;
+      const isNotFound = data.type === "https://mediawiki.org/wiki/HyperSwitch/errors/not_found";
+      const description = data.extract?.trim() ?? "";
+      const imageUrl = data.originalimage?.source ?? data.thumbnail?.source ?? null;
+
+      if (isNotFound || !description) {
+        return toast({
+          title: "No Wikipedia article found.",
+          description: `No matching article was found for "${trimmedQuery}".`,
+          variant: "destructive",
+        });
+      }
+
+      form.setValue("description", description, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      form.setValue("image", imageUrl, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+
+      return toast({
+        title: "Species fields autofilled.",
+        description: "Description and image were populated from Wikipedia.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error while fetching Wikipedia data.";
+      return toast({
+        title: "Could not load species info.",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearchingWikipedia(false);
+    }
+  };
+
   return (
     // Keep dialog open state controlled so it can be closed after successful submit.
     <Dialog open={open} onOpenChange={setOpen}>
@@ -157,6 +234,31 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
             Add a new species here. Click &quot;Add Species&quot; below when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
+        <section className="rounded-md border border-border/60 bg-muted/30 p-3">
+          <p className="mb-2 text-sm text-muted-foreground">
+            Search Wikipedia by species name to autofill the description and image fields.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={wikiQuery}
+              onChange={(event) => setWikiQuery(event.target.value)}
+              placeholder="e.g., Panthera leo or Lion"
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                void handleWikipediaSearch();
+              }}
+            />
+            <Button
+              type="button"
+              className="sm:w-40"
+              onClick={() => void handleWikipediaSearch()}
+              disabled={isSearchingWikipedia}
+            >
+              {isSearchingWikipedia ? "Searching..." : "Search Wikipedia"}
+            </Button>
+          </div>
+        </section>
         <Form {...form}>
           {/* React Hook Form handles validation lifecycle; zodResolver enforces schema rules. */}
           <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)}>
@@ -224,7 +326,10 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Endangerment status</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(endangermentStatuses.parse(value))} value={field.value}>
+                    <Select
+                      onValueChange={(value) => field.onChange(endangermentStatuses.parse(value))}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select endangerment status" />

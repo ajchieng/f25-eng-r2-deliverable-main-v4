@@ -43,13 +43,10 @@ export default async function SpeciesSpeedPage() {
       {/* Introductory narrative that explains what the chart is trying to show. */}
       <section className="mb-8">
         <h1 className="mb-2 text-2xl font-bold">How Fast Are Animals?</h1>
-        <p className="text-white-700">
-          The animal kingdom is full of speedsters, from the lightning-fast cheetah to the surprisingly swift pronghorn
-          antelope. But not all animals are built for speed—herbivores, omnivores, and carnivores have evolved different
-          strategies for survival, and their top velocities reflect their lifestyles. Carnivores often rely on bursts of
-          speed to catch prey, while herbivores may need to outrun predators, and omnivores fall somewhere in between.
-          The graph below compares the velocities of various animals, grouped by their dietary category, to reveal
-          fascinating patterns in nature’s race for survival.
+        <p className="text-muted-foreground">
+          This page compares the speed of animals based on their diet, endangerment status, and weight. The diet chart compares average speed and spread across herbivores, omnivores, and carnivores. The weight chart maps speed against body mass on a log scale so very
+          small and very large species can be compared in the same frame. The endangerment chart summarizes average speed
+          by conservation status. 
         </p>
       </section>
 
